@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+import sys
+from nmigen.back             import rtlil
+from nmigen._toolchain.yosys import *
+from nmigen.hdl.ir           import Fragment
+import click
+import importlib
+import inspect
+
+def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
+    yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
+    yosys_version = yosys.version()
+
+    module_prefix = "module \\"
+
+    modules = [
+        m.replace(module_prefix, "") for m in rtlil_text.split('\n')
+                                     if m.startswith(module_prefix)]
+
+    script = []
+    script.append("read_ilang <<rtlil\n{}\nrtlil".format(rtlil_text))
+
+    if yosys_version >= (0, 9, 3468):
+        # Yosys >=0.9+3468 (since commit 128522f1) emits the workaround for the `always @*`
+        # initial scheduling issue on its own.
+        script.append("delete w:$verilog_initial_trigger")
+
+    for module in modules:
+        script.append("show -nobg -colors 42 " + module)
+
+    return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
+
+def do_show(*args, **kwargs):
+    rtlil_text = rtlil.convert(*args, **kwargs)
+    return _show_rtlil_text(rtlil_text, src_loc_at=1)
+
+@click.group()
+def cli():
+    pass
+
+@cli.command()
+@click.argument('class_name')
+def show(class_name: str):
+    package_name, top_name = class_name.split('.')
+    module = importlib.import_module(package_name)
+    design_class = module.__dict__[top_name]
+    if not inspect.isclass(design_class):
+        print(top_name + " is not a class! exiting...")
+        sys.exit(1)
+
+    design = design_class()
+    fragment = Fragment.get(design, None)
+    do_show(fragment)
+
+if __name__ == '__main__':
+    cli()
