@@ -61,7 +61,15 @@ def show(class_name: str):
 
         if (parameter.default == Signature.empty):
             val = input(f"parameter {parameter.name} value: ")
-            value = parameter.annotation(val)
+
+            val_type = int
+            if parameter.annotation != Parameter.empty:
+                val_type = parameter.annotation
+            else:
+                val_type_str = input(f"parameter {parameter.name} type: ")
+                val_type = eval(val_type_str)
+
+            value = val_type(val)
             if parameter.kind == Parameter.KEYWORD_ONLY:
                 kwargs[parameter.name] = value
             elif parameter.kind == Parameter.POSITIONAL_ONLY:
