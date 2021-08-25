@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import sys
-from nmigen.back             import rtlil
 from nmigen._toolchain.yosys import *
 from nmigen.hdl.ir           import Fragment
 import click
@@ -32,22 +31,21 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
     return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
 
 def do_show(*args, **kwargs):
-    rtlil_text = rtlil.convert(*args, **kwargs)
+    rtlil_text = nmigen.back.rtlil.convert(*args, **kwargs)
     return _show_rtlil_text(rtlil_text, src_loc_at=1)
 
 @click.group()
 def cli():
     pass
 
-@cli.command()
-@click.argument('class_name')
-def show(class_name: str):
+def get_fragment(class_name: str):
     sys.path.append('.')
     parts = class_name.split('.')
     package_name = ".".join(parts[:-1])
     top_name = parts[-1]
     module = importlib.import_module(package_name)
     design_class = module.__dict__[top_name]
+
     if not inspect.isclass(design_class):
         print(top_name + " is not a class! exiting...")
         sys.exit(1)
@@ -77,7 +75,42 @@ def show(class_name: str):
 
     design = design_class(*args, **kwargs)
     fragment = Fragment.get(design, None)
+
+    return fragment
+
+@cli.command()
+@click.argument('class_name')
+def show(class_name: str):
+    fragment = get_fragment(class_name)
     do_show(fragment)
+
+@cli.group()
+def generate():
+    pass
+
+@generate.command()
+@click.argument('class_name')
+def verilog(class_name: str):
+    fragment = get_fragment(class_name)
+    from nmigen.back import verilog
+    output = verilog.convert(fragment)
+    print(output)
+
+@generate.command()
+@click.argument('class_name')
+def rtlil(class_name: str):
+    fragment = get_fragment(class_name)
+    from nmigen.back import rtlil
+    output = rtlil.convert(fragment)
+    print(output)
+
+@generate.command()
+@click.argument('class_name')
+def cxxrtl(class_name: str):
+    fragment = get_fragment(class_name)
+    from nmigen.back import cxxrtl
+    output = cxxrtl.convert(fragment)
+    print(output)
 
 if __name__ == '__main__':
     cli()
