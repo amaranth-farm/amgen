@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 import sys
-from nmigen._toolchain.yosys import *
-from nmigen.hdl.ir           import Fragment
+
+from   nmigen._toolchain.yosys import *
+from   nmigen.hdl.ir           import Fragment
+
 import click
 import importlib
 import inspect
-from inspect import Signature, Parameter
+from   inspect import Signature, Parameter
 
 def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
     yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
@@ -31,7 +33,8 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
     return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
 
 def do_show(*args, **kwargs):
-    rtlil_text = nmigen.back.rtlil.convert(*args, **kwargs)
+    from nmigen.back import rtlil
+    rtlil_text = rtlil.convert(*args, **kwargs)
     return _show_rtlil_text(rtlil_text, src_loc_at=1)
 
 @click.group()
@@ -76,41 +79,45 @@ def get_fragment(class_name: str):
     design = design_class(*args, **kwargs)
     fragment = Fragment.get(design, None)
 
-    return fragment
+    return [fragment, top_name]
 
 @cli.command()
 @click.argument('class_name')
 def show(class_name: str):
-    fragment = get_fragment(class_name)
+    fragment, name = get_fragment(class_name)
     do_show(fragment)
 
 @cli.group()
 def generate():
     pass
 
+def write_to_file(name: str, extension: str, output: str):
+    with open(f"{name}.{extension}", 'w') as f:
+        f.write(output)
+
 @generate.command()
 @click.argument('class_name')
 def verilog(class_name: str):
-    fragment = get_fragment(class_name)
+    fragment, name = get_fragment(class_name)
     from nmigen.back import verilog
     output = verilog.convert(fragment)
-    print(output)
+    write_to_file(name, "v", output)
 
 @generate.command()
 @click.argument('class_name')
 def rtlil(class_name: str):
-    fragment = get_fragment(class_name)
+    fragment, name = get_fragment(class_name)
     from nmigen.back import rtlil
     output = rtlil.convert(fragment)
-    print(output)
+    write_to_file(name, "il", output)
 
 @generate.command()
 @click.argument('class_name')
 def cxxrtl(class_name: str):
-    fragment = get_fragment(class_name)
+    fragment, name = get_fragment(class_name)
     from nmigen.back import cxxrtl
     output = cxxrtl.convert(fragment)
-    print(output)
+    write_to_file(name, "cpp", output)
 
 if __name__ == '__main__':
     cli()
