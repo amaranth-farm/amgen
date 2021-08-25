@@ -6,6 +6,7 @@ from nmigen.hdl.ir           import Fragment
 import click
 import importlib
 import inspect
+from inspect import Signature, Parameter
 
 def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
     yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
@@ -41,14 +42,32 @@ def cli():
 @cli.command()
 @click.argument('class_name')
 def show(class_name: str):
-    package_name, top_name = class_name.split('.')
+    sys.path.append('.')
+    parts = class_name.split('.')
+    package_name = ".".join(parts[:-1])
+    top_name = parts[-1]
     module = importlib.import_module(package_name)
     design_class = module.__dict__[top_name]
     if not inspect.isclass(design_class):
         print(top_name + " is not a class! exiting...")
         sys.exit(1)
 
-    design = design_class()
+    args = []
+    kwargs = {}
+    signature = inspect.signature(design_class.__init__)
+    for parameter in signature.parameters.values():
+        if parameter.name == "self":
+            continue
+
+        if (parameter.default == Signature.empty):
+            val = input(f"parameter {parameter.name} value: ")
+            value = parameter.annotation(val)
+            if parameter.kind == Parameter.KEYWORD_ONLY:
+                kwargs[parameter.name] = value
+            elif parameter.kind == Parameter.POSITIONAL_ONLY:
+                args.append(value)
+
+    design = design_class(*args, **kwargs)
     fragment = Fragment.get(design, None)
     do_show(fragment)
 
