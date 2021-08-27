@@ -97,10 +97,11 @@ def write_to_file(name: str, extension: str, output: str):
 
 @generate.command()
 @click.argument('class_name')
-def verilog(class_name: str):
+@click.option('--debug/--no-debug', default=False)
+def verilog(class_name: str, debug):
     fragment, name = get_fragment(class_name)
     from nmigen.back import verilog
-    output = verilog.convert(fragment)
+    output = verilog.convert(fragment,  strip_internal_attrs=(not debug))
     write_to_file(name, "v", output)
 
 @generate.command()
