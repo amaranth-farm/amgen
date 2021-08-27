@@ -29,7 +29,7 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
         script.append("delete w:$verilog_initial_trigger")
 
     for module in modules:
-        script.append("show -nobg -colors 42 " + module)
+        script.append("show -nobg -long -width -colors 42 " + module)
 
     return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
 
