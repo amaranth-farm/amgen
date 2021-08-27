@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import sys
+import re
 
 from   nmigen._toolchain.yosys import *
 from   nmigen.hdl.ir           import Fragment
@@ -98,7 +99,7 @@ def write_to_file(name: str, extension: str, output: str):
 @generate.command()
 @click.argument('class_name')
 @click.option('--debug/--no-debug', default=False)
-def verilog(class_name: str, debug):
+def verilog(class_name: str, debug: bool):
     fragment, name = get_fragment(class_name)
     from nmigen.back import verilog
     output = verilog.convert(fragment,  strip_internal_attrs=(not debug))
@@ -106,10 +107,16 @@ def verilog(class_name: str, debug):
 
 @generate.command()
 @click.argument('class_name')
-def rtlil(class_name: str):
+@click.option('--debug/--no-debug', default=False)
+def rtlil(class_name: str, debug:bool):
     fragment, name = get_fragment(class_name)
     from nmigen.back import rtlil
+    contains_attribute = re.compile(r"^\s*attribute (\\src|\\generator)")
     output = rtlil.convert(fragment)
+    if not debug:
+        lines = output.split('\n')
+        lines = [l for l in lines if contains_attribute.match(l) is None]
+        output = "\n".join(lines)
     write_to_file(name, "il", output)
 
 @generate.command()
