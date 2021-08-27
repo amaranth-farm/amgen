@@ -22,7 +22,14 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
 
     script = []
     script.append("read_ilang <<rtlil\n{}\nrtlil".format(rtlil_text))
-    script.append("proc")
+    script.append("""
+        proc_clean
+        proc_init
+        proc_arst
+        proc_mux
+        proc_dlatch
+        proc_dff
+        proc_clean""")
 
     if yosys_version >= (0, 9, 3468):
         # Yosys >=0.9+3468 (since commit 128522f1) emits the workaround for the `always @*`
