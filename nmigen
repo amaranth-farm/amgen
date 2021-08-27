@@ -2,8 +2,9 @@
 import sys
 import re
 
-from   nmigen._toolchain.yosys import *
-from   nmigen.hdl.ir           import Fragment
+from nmigen                  import Signal
+from nmigen._toolchain.yosys import *
+from nmigen.hdl.ir           import Fragment
 
 import click
 import importlib
@@ -86,7 +87,17 @@ def get_fragment(class_name: str):
                 args.append(value)
 
     design = design_class(*args, **kwargs)
+    ports = [member[1] for member in inspect.getmembers(design) if isinstance(member[1], Signal)]
     fragment = Fragment.get(design, None)
+    for port in ports:
+        dir=None
+        if port.name.endswith("_in"):
+            dir="i"
+        elif port.name.endswith("_out"):
+            dir="o"
+        else:
+            dir="io"
+        fragment.add_ports([port], dir=dir)
 
     return [fragment, top_name]
 
