@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import sys
 import re
 
@@ -96,6 +97,7 @@ def get_fragment(class_name: str):
         elif port.name.endswith("_out"):
             dir="o"
         else:
+            print(f"The name of port '{port.name}' did not end with _in or _out. Assuming inout.")
             dir="io"
         fragment.add_ports([port], dir=dir)
 
@@ -124,10 +126,8 @@ def verilog(class_name: str, debug: bool):
     output = verilog.convert(fragment,  strip_internal_attrs=(not debug))
     write_to_file(name, "v", output)
 
-@generate.command()
-@click.argument('class_name')
-@click.option('--debug/--no-debug', default=False)
-def rtlil(class_name: str, debug:bool):
+
+def generate_rtlil(class_name: str, debug:bool):
     fragment, name = get_fragment(class_name)
     from nmigen.back import rtlil
     contains_attribute = re.compile(r"^\s*attribute (\\src|\\generator)")
@@ -136,6 +136,13 @@ def rtlil(class_name: str, debug:bool):
         lines = output.split('\n')
         lines = [l for l in lines if contains_attribute.match(l) is None]
         output = "\n".join(lines)
+    return (name, output)
+
+@generate.command()
+@click.argument('class_name')
+@click.option('--debug/--no-debug', default=False)
+def rtlil(class_name: str, debug:bool):
+    name, output = generate_rtlil(class_name=class_name, debug=debug)
     write_to_file(name, "il", output)
 
 @generate.command()
@@ -145,6 +152,37 @@ def cxxrtl(class_name: str):
     from nmigen.back import cxxrtl
     output = cxxrtl.convert(fragment)
     write_to_file(name, "cpp", output)
+
+@cli.command()
+@click.argument('class_name')
+@click.option('--debug/--no-debug', default=False)
+def netlistsvg(class_name: str, debug:bool):
+    filename, rtlil_text = generate_rtlil(class_name=class_name, debug=debug)
+
+    yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
+    yosys_version = yosys.version()
+
+    script = []
+    script.append("read_ilang <<rtlil\n{}\nrtlil".format(rtlil_text))
+    script.append("""
+        proc_clean
+        proc_init
+        proc_arst
+        proc_mux
+        proc_dlatch
+        proc_dff
+        proc_clean""")
+
+    if yosys_version >= (0, 9, 3468):
+        # Yosys >=0.9+3468 (since commit 128522f1) emits the workaround for the `always @*`
+        # initial scheduling issue on its own.
+        script.append("delete w:$verilog_initial_trigger")
+
+    netlist_filename = filename + ".json"
+    script.append("write_json " + netlist_filename)
+    yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1)
+    os.system(f"netlistsvg {netlist_filename} -o {filename}.svg")
+    os.system(f"xdg-open {filename}.svg")
 
 if __name__ == '__main__':
     cli()
