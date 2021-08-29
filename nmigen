@@ -12,7 +12,7 @@ import importlib
 import inspect
 from   inspect import Signature, Parameter
 
-def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
+def _show_rtlil_text(rtlil_text: str, *, src_loc_at=0, optimize=False):
     yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
     yosys_version = yosys.version()
 
@@ -33,6 +33,9 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
         proc_dff
         proc_clean""")
 
+    if optimize:
+        script.append("opt")
+
     if yosys_version >= (0, 9, 3468):
         # Yosys >=0.9+3468 (since commit 128522f1) emits the workaround for the `always @*`
         # initial scheduling issue on its own.
@@ -43,9 +46,9 @@ def _show_rtlil_text(rtlil_text, *, src_loc_at=0):
 
     return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
 
-def do_show(*args, **kwargs):
+def do_show(fragment: Fragment, optimize: bool):
     from nmigen.back import rtlil
-    rtlil_text = rtlil.convert(*args, **kwargs)
+    rtlil_text = rtlil.convert(fragment)
     return _show_rtlil_text(rtlil_text, src_loc_at=1)
 
 @click.group()
@@ -105,9 +108,10 @@ def get_fragment(class_name: str):
 
 @cli.command()
 @click.argument('class_name')
-def show(class_name: str):
+@click.option('--optimize', is_flag=True)
+def show(class_name: str, optimize: bool):
     fragment, name = get_fragment(class_name)
-    do_show(fragment)
+    do_show(fragment, optimize)
 
 @cli.group()
 def generate():
@@ -119,7 +123,7 @@ def write_to_file(name: str, extension: str, output: str):
 
 @generate.command()
 @click.argument('class_name')
-@click.option('--debug/--no-debug', default=False)
+@click.option('--debug', is_flag=True)
 def verilog(class_name: str, debug: bool):
     fragment, name = get_fragment(class_name)
     from nmigen.back import verilog
@@ -140,7 +144,7 @@ def generate_rtlil(class_name: str, debug:bool):
 
 @generate.command()
 @click.argument('class_name')
-@click.option('--debug/--no-debug', default=False)
+@click.option('--debug', is_flag=True)
 def rtlil(class_name: str, debug:bool):
     name, output = generate_rtlil(class_name=class_name, debug=debug)
     write_to_file(name, "il", output)
@@ -155,8 +159,9 @@ def cxxrtl(class_name: str):
 
 @cli.command()
 @click.argument('class_name')
-@click.option('--debug/--no-debug', default=False)
-def netlistsvg(class_name: str, debug:bool):
+@click.option('--debug', is_flag=True)
+@click.option('--optimize', is_flag=True)
+def netlistsvg(class_name: str, debug: bool, optimize: bool):
     filename, rtlil_text = generate_rtlil(class_name=class_name, debug=debug)
 
     yosys = find_yosys(lambda ver: ver >= (0, 9, 3468))
@@ -172,6 +177,9 @@ def netlistsvg(class_name: str, debug:bool):
         proc_dlatch
         proc_dff
         proc_clean""")
+
+    if optimize:
+        script.append("opt")
 
     if yosys_version >= (0, 9, 3468):
         # Yosys >=0.9+3468 (since commit 128522f1) emits the workaround for the `always @*`
