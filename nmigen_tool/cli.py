@@ -100,8 +100,11 @@ def get_fragment(class_name: str):
         elif port.name.endswith("_out"):
             dir="o"
         else:
-            print(f"The name of port '{port.name}' did not end with _in or _out. Assuming inout.")
-            dir="io"
+            while dir is None:
+                dir = input(f"Port '{port.name}' did not end with _in or _out. Is it an input or output? [i/o]: ")
+                if not dir in ["i", "o"]:
+                    dir = None
+
         fragment.add_ports([port], dir=dir)
 
     return [fragment, top_name]
