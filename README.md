@@ -13,8 +13,8 @@ Usage:
 
 * show yosys RTL representation:
     `nmigen show nmigen_library.utils.EdgeToPulse`
-    !['nmigen show' command](./doc/show.png)
+    !['nmigen show' command](https://github.com/hansfbaier/nmigen-tool/blob/main/doc/show.png)
 
 * show netlistsvg RTL representation:
     `nmigen netlistsvg  nmigen_library.utils.EdgeToPulse`
-    !['nmigen netlistsvg' command](./doc/netlistsvg.png)
+    !['nmigen netlistsvg' command](https://github.com/hansfbaier/nmigen-tool/blob/main/doc/netlistsvg.png)

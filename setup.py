@@ -1,11 +1,18 @@
 from setuptools import setup, find_packages
 
+# read the contents of your README file
+from pathlib import Path
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
+
 setup(
     name='nmigen-tool',
     version='0.0.1',
     author="Hans Baier",
     author_email="hansfbaier@gmail.com",
     description="nmigen command line tool for generating verilog, rtlil, cxxrtl and showing design diagrams",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     license_files = ('LICENSE.txt',),
     platforms='linux',
     url="https://github.com/hansfbaier/nmigen-tool/",
