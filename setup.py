@@ -6,18 +6,18 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name='nmigen-tool',
+    name='amaranth-tool',
     version='0.0.1',
     author="Hans Baier",
     author_email="hansfbaier@gmail.com",
-    description="nmigen command line tool for generating verilog, rtlil, cxxrtl and showing design diagrams",
+    description="amaranth command line tool for generating verilog, rtlil, cxxrtl and showing design diagrams",
     long_description=long_description,
     long_description_content_type='text/markdown',
     license_files = ('LICENSE.txt',),
     platforms='linux',
-    url="https://github.com/hansfbaier/nmigen-tool/",
+    url="https://github.com/hansfbaier/amaranth-tool/",
     project_urls={
-        "Bug Tracker": "https://github.com/hansfbaier/nmigen-tool/issues",
+        "Bug Tracker": "https://github.com/hansfbaier/amaranth-tool/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -33,6 +33,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        nmigen=nmigen_tool:cli
+        amaranth=amaranth_tool:cli
     ''',
 )

@@ -3,9 +3,9 @@ import os
 import sys
 import re
 
-from nmigen                  import Signal
-from nmigen._toolchain.yosys import *
-from nmigen.hdl.ir           import Fragment
+from amaranth                  import Signal
+from amaranth._toolchain.yosys import *
+from amaranth.hdl.ir           import Fragment
 
 import click
 import importlib
@@ -47,7 +47,7 @@ def _show_rtlil_text(rtlil_text: str, *, src_loc_at=0, optimize=False):
     return yosys.run(["-q", "-"], "\n".join(script), src_loc_at=1 + src_loc_at)
 
 def do_show(fragment: Fragment, optimize: bool):
-    from nmigen.back import rtlil
+    from amaranth.back import rtlil
     rtlil_text = rtlil.convert(fragment)
     return _show_rtlil_text(rtlil_text, src_loc_at=1)
 
@@ -129,14 +129,14 @@ def write_to_file(name: str, extension: str, output: str):
 @click.option('--debug', is_flag=True)
 def verilog(class_name: str, debug: bool):
     fragment, name = get_fragment(class_name)
-    from nmigen.back import verilog
+    from amaranth.back import verilog
     output = verilog.convert(fragment,  strip_internal_attrs=(not debug))
     write_to_file(name, "v", output)
 
 
 def generate_rtlil(class_name: str, debug:bool):
     fragment, name = get_fragment(class_name)
-    from nmigen.back import rtlil
+    from amaranth.back import rtlil
     contains_attribute = re.compile(r"^\s*attribute (\\src|\\generator)")
     output = rtlil.convert(fragment)
     if not debug:
@@ -156,7 +156,7 @@ def rtlil(class_name: str, debug:bool):
 @click.argument('class_name')
 def cxxrtl(class_name: str):
     fragment, name = get_fragment(class_name)
-    from nmigen.back import cxxrtl
+    from amaranth.back import cxxrtl
     output = cxxrtl.convert(fragment)
     write_to_file(name, "cpp", output)
 
