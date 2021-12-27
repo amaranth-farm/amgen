@@ -6,7 +6,7 @@ this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
 
 setup(
-    name='an-amaranth-tool',
+    name='amgen',
     version='0.0.1',
     author="Hans Baier",
     author_email="hansfbaier@gmail.com",
@@ -15,9 +15,9 @@ setup(
     long_description_content_type='text/markdown',
     license_files = ('LICENSE.txt',),
     platforms='linux',
-    url="https://github.com/hansfbaier/an-amaranth-tool/",
+    url="https://github.com/hansfbaier/amgen/",
     project_urls={
-        "Bug Tracker": "https://github.com/hansfbaier/an-amaranth-tool/issues",
+        "Bug Tracker": "https://github.com/hansfbaier/amgen/issues",
     },
     classifiers=[
         "Programming Language :: Python :: 3",
@@ -33,6 +33,6 @@ setup(
     ],
     entry_points='''
         [console_scripts]
-        amaranth=an_amaranth_tool:cli
+        amgen=amgen:cli
     ''',
 )
