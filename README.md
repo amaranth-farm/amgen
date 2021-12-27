@@ -1,5 +1,5 @@
-# amaranth-tool
-command line tool for frequent amaranth tasks (generate sources, show design)
+# an-amaranth-tool
+unofficial command line tool for frequent amaranth HDL tasks (generate sources, show design)
 
 Usage:
 * generate verilog:
@@ -13,8 +13,8 @@ Usage:
 
 * show yosys RTL representation:
     `amaranth show amaranth_library.utils.EdgeToPulse`
-    !['amaranth show' command](https://github.com/hansfbaier/amaranth-tool/blob/main/doc/show.png)
+    !['amaranth show' command](https://github.com/hansfbaier/an-amaranth-tool/blob/main/doc/show.png)
 
 * show netlistsvg RTL representation:
     `amaranth netlistsvg  amaranth_library.utils.EdgeToPulse`
-    !['amaranth netlistsvg' command](https://github.com/hansfbaier/amaranth-tool/blob/main/doc/netlistsvg.png)
+    !['amaranth netlistsvg' command](https://github.com/hansfbaier/an-amaranth-tool/blob/main/doc/netlistsvg.png)
